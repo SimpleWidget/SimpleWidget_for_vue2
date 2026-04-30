@@ -1,0 +1,95 @@
+@import './common/base.scss';
+
+// 不同大小
+$buttonSize: (
+  (name: 'large',
+    height: $large,
+    fontSize: 15px,
+    padding: 30px),
+  (name: 'middle',
+    height: $middle,
+    fontSize: 14px,
+    padding: 25px),
+  (name: 'small',
+    height: $small,
+    fontSize: 13px,
+    padding: 20px),
+  (name: 'mini',
+    height: $mini,
+    fontSize: 12px,
+    padding: 15px)
+);
+
+.sw-button {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  border: none;
+  outline: none;
+  user-select: none;
+  text-decoration: none;
+  height: $middle;
+  transition: 0.3s;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 25px;
+  background: $default;
+  color: $fontDefault;
+  border-radius: $basicRadiusSize;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: middle;
+
+  // 不同尺寸
+  @for $i from 1 through length($buttonSize) {
+    $item: nth($buttonSize, $i);
+    &.sw-button-#{nth($item, 1)} {
+      height: nth($item, 2);
+      padding: 0 nth($item, 4);
+      line-height: nth($item, 2);
+      font-size: nth($item, 3);
+    }
+  }
+
+  @for $i from 1 through length($allTypeColorList) {
+    $item: nth($allTypeColorList, $i);
+    // 不同类型
+    &.sw-button-#{map-get($item, name)} {
+      background: map-get($item, default);
+      color: map-get($item, defaultTextColor);
+      &:hover {
+        background: map-get($item, defaultHover);
+      }
+      &:active {
+        background: map-get($item, defaultActive);
+      }
+      // 禁用状态
+      &.sw-button-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    // 文字按钮
+    &.sw-button-text {
+      background: none;
+      color: map-get($item, lightTextColor);
+      &:hover {
+        background: $default;
+      }
+      &:active {
+        background: darken($default, 5%);
+      }
+      // 文字按钮禁用状态
+      &.sw-button-disabled:hover {
+        background: #fff;
+        color: map-get($item, lightTextColor);
+        border: 1px solid map-get($item, lightTextColor);
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
