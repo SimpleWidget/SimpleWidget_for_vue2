@@ -88,6 +88,12 @@ export default Vue.extend({
         'sw-table--stripe': this.stripe,
         'sw-table--hover': this.hover,
       };
+    },
+    safeColumns(): any[] {
+      return (this.columns as any[]) || [];
+    },
+    safeData(): any[] {
+      return this.formatData;
     }
   },
   watch: {
@@ -124,18 +130,30 @@ export default Vue.extend({
       const target = e.target as HTMLInputElement;
       this.handleSelectAll(target.checked);
     },
-    getCellStyle(column: TableColumn): Record<string, string> {
-      const style: Record<string, string> = {};
+    getColumnWidth(column: any): string {
       if (column.width) {
-        style.width = typeof column.width === 'number' ? `${column.width}px` : column.width;
+        return typeof column.width === 'number' ? `${column.width}px` : column.width;
       }
+      return 'auto';
+    },
+    getColumnMinWidth(column: any): string {
       if (column.minWidth) {
-        style.minWidth = typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth;
+        return typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth;
       }
-      if (column.align) {
-        style.textAlign = column.align;
-      }
+      return 'auto';
+    },
+    getCellStyle(column: any): Record<string, string> {
+      const style: Record<string, string> = {};
+      if (column.width) style.width = typeof column.width === 'number' ? `${column.width}px` : column.width;
+      if (column.minWidth) style.minWidth = typeof column.minWidth === 'number' ? `${column.minWidth}px` : column.minWidth;
+      if (column.align) style.textAlign = column.align;
       return style;
+    },
+    getItemKey(item: any, key: string): any {
+      return item[key];
+    },
+    isItemSelected(item: any): boolean {
+      return item._select;
     }
   }
 });
@@ -156,9 +174,9 @@ export default Vue.extend({
             <col v-if="select" width="50" />
             <col v-if="num" width="60" />
             <col
-              v-for="(column, index) in columns"
+              v-for="(column, index) in safeColumns"
               :key="index"
-              :width="(column as any).width"
+              :width="getColumnWidth(column)"
             />
           </colgroup>
 
@@ -169,15 +187,15 @@ export default Vue.extend({
               </th>
               <th v-if="num" class="sw-table__th sw-table__th--num">#</th>
               <th
-                v-for="(column, index) in columns"
+                v-for="(column, index) in safeColumns"
                 :key="index"
                 class="sw-table__th"
-                :class="{ 'sw-table__th--sortable': (column as any).sortable }"
-                :style="getCellStyle(column as any)"
+                :class="{ 'sw-table__th--sortable': column.sortable }"
+                :style="getCellStyle(column)"
               >
                 <span class="sw-table__th-content">
-                  {{ (column as any).title }}
-                  <span v-if="(column as any).sortable" class="sw-table__sort-icon">
+                  {{ column.title }}
+                  <span v-if="column.sortable" class="sw-table__sort-icon">
                     <i class="sw-icon sw-icon-sort" />
                   </span>
                 </span>
@@ -187,30 +205,30 @@ export default Vue.extend({
 
           <tbody class="sw-table__body">
             <tr
-              v-for="(item, m) in formatData"
+              v-for="(item, m) in safeData"
               :key="m"
               class="sw-table__row"
               :class="{
-                'sw-table__row--selected': (item as any)._select,
+                'sw-table__row--selected': isItemSelected(item),
                 'sw-table__row--stripe': stripe && m % 2 === 1
               }"
               @click="handleRowClick(item, m)"
             >
               <td v-if="select" class="sw-table__td" @click.stop>
-                <input type="checkbox" :checked="(item as any)._select" @change="handleRowSelect(item)" />
+                <input type="checkbox" :checked="isItemSelected(item)" @change="handleRowSelect(item)" />
               </td>
               <td v-if="num" class="sw-table__td sw-table__td--num">{{ m + 1 }}</td>
               <td
-                v-for="(column, i) in columns"
+                v-for="(column, i) in safeColumns"
                 :key="i"
                 class="sw-table__td"
-                :style="getCellStyle(column as any)"
+                :style="getCellStyle(column)"
               >
-                <template v-if="(column as any).render">
-                  {{ (column as any).render(item, column, m) }}
+                <template v-if="column.render">
+                  {{ column.render(item, column, m) }}
                 </template>
-                <template v-else-if="(column as any).key">
-                  {{ item[(column as any).key] }}
+                <template v-else-if="column.key">
+                  {{ getItemKey(item, column.key) }}
                 </template>
               </td>
             </tr>
