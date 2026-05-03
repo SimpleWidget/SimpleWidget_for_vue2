@@ -24,17 +24,24 @@ export default Vue.extend({
     }
   },
   inject: ['tree'],
+  computed: {
+    isExpanded(): boolean {
+      const tree = (this as any).tree;
+      return tree?.expandedKeys?.value?.includes(this.label) || false;
+    }
+  },
   methods: {
     handleClick() {
       const tree = (this as any).tree;
-      if (tree) {
+      if (!this.disabled && tree) {
         tree.handleSelect({ label: this.label, children: this.children });
       }
     },
-    toggleExpand(key: string) {
+    handleToggle(e: MouseEvent) {
+      e.stopPropagation();
       const tree = (this as any).tree;
       if (tree) {
-        tree.toggleExpand(key);
+        tree.toggleExpand(this.label);
       }
     }
   }
@@ -47,11 +54,12 @@ export default Vue.extend({
       <span
         v-if="children && children.length"
         class="sw-tree__arrow"
-        @click.stop="toggleExpand(label)"
+        :class="{ 'sw-tree__arrow--expanded': isExpanded }"
+        @click="handleToggle"
       >▶</span>
       <span class="sw-tree__label">{{ label }}</span>
     </div>
-    <div v-if="children && children.length" class="sw-tree__children">
+    <div v-if="children && children.length && isExpanded" class="sw-tree__children">
       <slot />
     </div>
   </div>
